@@ -1,11 +1,12 @@
-import { Image, StyleSheet, Platform, Pressable, ActivityIndicator, ScrollView, View } from 'react-native';
+import { Image, StyleSheet, Platform, Pressable, ActivityIndicator, ScrollView, View, Alert } from 'react-native';
 import { useState } from 'react';
 import OpenAI from 'openai';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSaveImage } from '@/hooks/useSaveImage';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { CONFIG } from '../../config';
+import { CONFIG } from '../../../config';
 import { useGeneratedImages } from '@/stores/imageStore';
 
 const artStyles = [
@@ -32,6 +33,7 @@ export default function HomeScreen() {
   const [currentStyle, setCurrentStyle] = useState<string>("");
   const { addImage } = useGeneratedImages();
   const insets = useSafeAreaInsets();
+  const { saveImage } = useSaveImage();
 
   const openai = new OpenAI({
     apiKey: CONFIG.OPENAI_API_KEY,
@@ -46,7 +48,7 @@ export default function HomeScreen() {
       
       const response = await openai.images.generate({
         model: "dall-e-3",
-        prompt: `Generate an image of my black lab, Maverick, except replace his head with the head of a viper, much like a griffin has the body of a lion but the head of an eagle, ${randomStyle}`,
+        prompt: `Generate an image of my black lab, except instead of his head, replace it with the head of a viper, ${randomStyle}`,
         n: 1,
         size: "1024x1024",
       });
@@ -61,6 +63,12 @@ export default function HomeScreen() {
       // You might want to show an error message to the user here
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveImage = () => {
+    if (imageUrl) {
+      saveImage(imageUrl);
     }
   };
 
@@ -79,6 +87,15 @@ export default function HomeScreen() {
                 style={styles.image}
               />
               <ThemedText style={styles.styleText}>Style: {currentStyle}</ThemedText>
+              <Pressable 
+                onPress={handleSaveImage}
+                style={({pressed}) => [
+                  styles.saveButton,
+                  pressed && styles.buttonPressed
+                ]}
+              >
+                <ThemedText style={styles.buttonText}>Save to Photos</ThemedText>
+              </Pressable>
             </>
           ) : (
             <ThemedText style={styles.placeholder}>Press the button to generate an image</ThemedText>
@@ -152,5 +169,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 20,
     textAlign: 'center',
+  },
+  saveButton: {
+    backgroundColor: '#4CAF50',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10,
+    width: '50%',
   },
 });
