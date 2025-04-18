@@ -9,6 +9,9 @@ import { ThemedView } from '@/components/ThemedView';
 import { CONFIG } from '../../../config';
 import { useGeneratedImages } from '@/stores/imageStore';
 
+/**
+ * List of artistic styles that can be randomly applied to generated images
+ */
 const artStyles = [
   "in the style of Van Gogh's Starry Night",
   "as a Renaissance oil painting",
@@ -27,7 +30,12 @@ const artStyles = [
   "in steampunk style"
 ];
 
+/**
+ * Main screen component for generating AI images
+ * Handles image generation using DALL-E and provides saving functionality
+ */
 export default function HomeScreen() {
+  // State management
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [currentStyle, setCurrentStyle] = useState<string>("");
@@ -35,17 +43,24 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { saveImage } = useSaveImage();
 
+  // Initialize OpenAI client
   const openai = new OpenAI({
     apiKey: CONFIG.OPENAI_API_KEY,
     dangerouslyAllowBrowser: true // Required for Expo web
   });
 
+  /**
+   * Generates a new image using DALL-E 3
+   * Applies a random artistic style from the artStyles list
+   */
   const generateImage = async () => {
     try {
       setLoading(true);
+      // Select random art style
       const randomStyle = artStyles[Math.floor(Math.random() * artStyles.length)];
       setCurrentStyle(randomStyle);
       
+      // Generate image using DALL-E
       const response = await openai.images.generate({
         model: "dall-e-3",
         prompt: `Generate an image of my black lab, except instead of his head, replace it with the head of a viper, ${randomStyle}`,
@@ -53,6 +68,7 @@ export default function HomeScreen() {
         size: "1024x1024",
       });
       
+      // Update state with generated image
       if (response.data[0].url) {
         const url = response.data[0].url;
         setImageUrl(url);
@@ -66,6 +82,10 @@ export default function HomeScreen() {
     }
   };
 
+  /**
+   * Handles saving the current image to the device
+   * Only attempts to save if an image is currently displayed
+   */
   const handleSaveImage = () => {
     if (imageUrl) {
       saveImage(imageUrl);
@@ -79,8 +99,10 @@ export default function HomeScreen() {
       <ThemedView style={styles.mainContainer}>
         <View style={styles.contentContainer}>
           {loading ? (
+            // Show loading spinner while generating
             <ActivityIndicator size="large" color="#A1CEDC" />
           ) : imageUrl ? (
+            // Show generated image and save button
             <>
               <Image
                 source={{ uri: imageUrl }}
@@ -98,10 +120,12 @@ export default function HomeScreen() {
               </Pressable>
             </>
           ) : (
+            // Show placeholder when no image is generated
             <ThemedText style={styles.placeholder}>Press the button to generate an image</ThemedText>
           )}
         </View>
         
+        {/* Generate button with safe area padding */}
         <View style={[styles.buttonWrapper, { marginBottom: insets.bottom + 90 }]}>
           <Pressable 
             onPress={generateImage} 
@@ -121,6 +145,9 @@ export default function HomeScreen() {
   );
 }
 
+/**
+ * Styles for the HomeScreen component
+ */
 const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,

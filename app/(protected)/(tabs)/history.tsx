@@ -6,7 +6,12 @@ import { useGeneratedImages } from '@/stores/imageStore';
 import type { GeneratedImage } from '@/stores/imageStore';
 import { useSaveImage } from '@/hooks/useSaveImage';
 
+/**
+ * History screen component that displays all previously generated images
+ * Allows users to view and save any of their past generations
+ */
 export default function HistoryScreen() {
+  // Get saved images from store
   const { images } = useGeneratedImages();
   const insets = useSafeAreaInsets();
   const { saveImage } = useSaveImage();
@@ -21,10 +26,12 @@ export default function HistoryScreen() {
       <ThemedView style={styles.container}>
         <ThemedText style={styles.title}>Generated Images</ThemedText>
         {images.length === 0 ? (
+          // Show placeholder when no images exist
           <ThemedText style={styles.placeholder}>
             No images generated yet. Go to the Generate tab to create some!
           </ThemedText>
         ) : (
+          // Display grid of generated images
           <View style={styles.imageGrid}>
             {images.map((item: GeneratedImage, index: number) => (
               <View key={index} style={styles.imageContainer}>
@@ -48,6 +55,10 @@ export default function HistoryScreen() {
   );
 }
 
+/**
+ * Styles for the HistoryScreen component
+ * Includes layout for the image grid and individual image containers
+ */
 const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,

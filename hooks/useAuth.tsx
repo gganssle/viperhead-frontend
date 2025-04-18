@@ -107,6 +107,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * Custom hook to access authentication context
+ * @throws {Error} If used outside of AuthProvider
+ * @returns Authentication context data
+ */
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
