@@ -1,50 +1,90 @@
-# Welcome to your Expo app 👋
+# Viperhead - AI Image Generator 🐍
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A React Native mobile app that generates unique images of a black lab with a viper's head using DALL-E 3. Built with Expo and TypeScript.
 
-## Get started
+## Features
 
-1. Install dependencies
+- **AI Image Generation**: Uses OpenAI's DALL-E 3 to create unique hybrid images
+- **Style Variety**: Automatically applies random artistic styles (Van Gogh, Renaissance, Cyberpunk, etc.)
+- **Image History**: View and manage all your previously generated images
+- **Save to Gallery**: Save any generated image directly to your phone's photo library
+- **Google Authentication**: Secure login system with email-based access control
+- **Modern UI**: Clean, responsive interface with dark mode support
 
+## Tech Stack
+
+- **Framework**: React Native with Expo
+- **Language**: TypeScript
+- **Authentication**: Google OAuth via expo-auth-session
+- **Routing**: Expo Router with file-based routing
+- **State Management**: React Context for auth, custom hooks for image storage
+- **AI Integration**: OpenAI API (DALL-E 3)
+- **Storage**: Local storage with expo-file-system and expo-media-library
+
+## Getting Started
+
+1. Clone the repository
+2. Install dependencies:
    ```bash
    npm install
    ```
 
-2. Start the app
-
-   ```bash
-    npx expo start
+3. Configure environment variables:
+   Create a `config.ts` file in the project root with:
+   ```typescript
+   export const CONFIG = {
+     GOOGLE_CLIENT_ID: 'your_google_client_id',
+     OPENAI_API_KEY: 'your_openai_api_key',
+     ALLOWED_EMAILS: ['your@email.com']
+   };
    ```
 
-In the output, you'll find options to open the app in a
+4. Start the development server:
+   ```bash
+   # Local development
+   npx expo start
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+   # Using tunnel (recommended for mobile device testing)
+   npx expo start --tunnel
+   ```
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+5. Build development client (required for iOS):
+   ```bash
+   # Install EAS CLI if you haven't already
+   npm install -g eas-cli
 
-## Get a fresh project
+   # Build development client
+   eas build --profile development --platform ios
+   ```
 
-When you're ready, run:
+   Note: Building for iOS requires an Apple Developer account. The development build enables testing native features like image saving that aren't available in Expo Go.
 
-```bash
-npm run reset-project
-```
+## Project Structure
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+- `/app`: Main application code using file-based routing
+  - `/(protected)`: Routes that require authentication
+    - `/(tabs)`: Tab-based navigation
+      - `index.tsx`: Image generation screen
+      - `history.tsx`: Generated images history
+  - `login.tsx`: Authentication screen
+- `/hooks`: Custom React hooks
+  - `useAuth.tsx`: Authentication logic
+  - `useSaveImage.tsx`: Image saving functionality
+- `/components`: Reusable UI components
+- `/stores`: State management
+  - `imageStore.ts`: Generated images storage
 
-## Learn more
+## Development Notes
 
-To learn more about developing your project with Expo, look at the following resources:
+- The app uses Expo's development build for testing
+- Google authentication requires proper setup in the Google Cloud Console
+- DALL-E 3 API calls require an OpenAI API key with sufficient credits
+- Image saving functionality requires user permission for photo library access
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Future Enhancements
 
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- Add image sharing capabilities
+- Implement custom style selection
+- Add image editing features
+- Support for multiple animal combinations
+- Cloud storage for generated images
