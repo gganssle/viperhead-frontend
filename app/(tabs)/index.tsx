@@ -1,74 +1,99 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import { Image, StyleSheet, Platform, Pressable, ActivityIndicator } from 'react-native';
+import { useState } from 'react';
+import OpenAI from 'openai';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { CONFIG } from '../../config';
 
 export default function HomeScreen() {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const openai = new OpenAI({
+    apiKey: CONFIG.OPENAI_API_KEY,
+    dangerouslyAllowBrowser: true // Required for Expo web
+  });
+
+  const generateImage = async () => {
+    try {
+      setLoading(true);
+      const response = await openai.images.generate({
+        model: "dall-e-3",
+        prompt: "Generate a beautiful, high-quality image of my black lab, Maverick, except replace his head with the head of a viper snake.",
+        n: 1,
+        size: "1024x1024",
+      });
+      
+      if (response.data[0].url) {
+        setImageUrl(response.data[0].url);
+      }
+    } catch (error) {
+      console.error('Error generating image:', error);
+      // You might want to show an error message to the user here
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
+    <ThemedView style={styles.container}>
+      {loading ? (
+        <ActivityIndicator size="large" color="#A1CEDC" />
+      ) : imageUrl ? (
         <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+          source={{ uri: imageUrl }}
+          style={styles.image}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
+      ) : (
+        <ThemedText style={styles.placeholder}>Press the button to generate an image</ThemedText>
+      )}
+      <Pressable 
+        onPress={generateImage} 
+        style={({pressed}) => [
+          styles.button,
+          pressed && styles.buttonPressed
+        ]}
+        disabled={loading}
+      >
+        <ThemedText style={styles.buttonText}>
+          {loading ? 'Generating...' : 'Generate New Image'}
         </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      </Pressable>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  container: {
+    flex: 1,
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'center',
+    padding: 20,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  image: {
+    width: '100%',
+    height: '80%',
+    borderRadius: 10,
+    marginBottom: 20,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  button: {
+    backgroundColor: '#A1CEDC',
+    padding: 15,
+    borderRadius: 8,
+    width: '80%',
+    alignItems: 'center',
+  },
+  buttonPressed: {
+    opacity: 0.8,
+  },
+  buttonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  placeholder: {
+    fontSize: 16,
+    marginBottom: 20,
   },
 });
