@@ -37,5 +37,3 @@ yarn-error.*
 
 app-example
 
-# Config file with API keys
-config.ts

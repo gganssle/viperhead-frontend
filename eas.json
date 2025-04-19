@@ -17,6 +17,8 @@
       }
     },
     "production": {
+      "environment": "production",
+      "distribution": "store",
       "ios": {
         "resourceClass": "m-medium"
       }

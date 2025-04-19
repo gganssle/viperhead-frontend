@@ -9,6 +9,9 @@ import { ThemedView } from '@/components/ThemedView';
 import { CONFIG } from '../../../config';
 import { useGeneratedImages } from '@/stores/imageStore';
 
+import Constants from 'expo-constants';
+
+
 /**
  * List of artistic styles that can be randomly applied to generated images
  */
@@ -44,8 +47,10 @@ export default function HomeScreen() {
   const { saveImage } = useSaveImage();
 
   // Initialize OpenAI client
+  const apiKey = Constants.expoConfig?.extra?.openaiApiKey;
+
   const openai = new OpenAI({
-    apiKey: CONFIG.OPENAI_API_KEY,
+    apiKey: apiKey,
     dangerouslyAllowBrowser: true // Required for Expo web
   });
 
