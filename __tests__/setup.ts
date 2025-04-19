@@ -1,9 +1,8 @@
 import '@testing-library/jest-native/extend-expect';
 import { jest } from '@jest/globals';
 import { Alert } from 'react-native';
-import type { MediaLibraryAsset, MediaLibraryPermissionResponse } from 'expo-media-library';
-import type { DownloadResult } from 'expo-file-system';
-import type { ImageGenerateParams } from 'openai/resources/images';
+import type { PermissionResponse } from 'expo-modules-core';
+import type { FileSystemDownloadResult } from 'expo-file-system';
 
 // Mock Expo modules
 jest.mock('expo-media-library', () => ({
@@ -11,8 +10,8 @@ jest.mock('expo-media-library', () => ({
     status: 'granted',
     granted: true,
     canAskAgain: true
-  } satisfies MediaLibraryPermissionResponse),
-  saveToLibraryAsync: jest.fn().mockResolvedValue('asset-id' satisfies MediaLibraryAsset['id']),
+  } satisfies PermissionResponse),
+  saveToLibraryAsync: jest.fn().mockResolvedValue('asset-id'),
 }));
 
 jest.mock('expo-file-system', () => ({
@@ -20,8 +19,9 @@ jest.mock('expo-file-system', () => ({
     uri: 'downloaded-image.jpg',
     status: 200,
     headers: {},
+    mimeType: 'image/jpeg',
     md5: 'mock-md5'
-  } satisfies DownloadResult),
+  } satisfies FileSystemDownloadResult),
 }));
 
 jest.mock('expo-secure-store', () => ({
@@ -82,7 +82,7 @@ jest.mock('@/components/ThemedView', () => ({
 jest.mock('openai', () => {
   const mockGenerate = jest.fn().mockResolvedValue({
     data: [{ url: 'https://mock-image-url.com/image.jpg' }]
-  } satisfies { data: Array<{ url: string }> });
+  });
 
   return {
     OpenAI: jest.fn().mockImplementation(() => ({

@@ -24,9 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId: CONFIG.GOOGLE_CLIENT_ID,
-    iosClientId: CONFIG.GOOGLE_CLIENT_ID,
-    clientId: CONFIG.GOOGLE_CLIENT_ID, // Web client ID
+    iosClientId: CONFIG.GOOGLE_IOS_CLIENT_ID,
     scopes: ['email', 'profile']
   });
 
@@ -68,21 +66,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
 
     // Temporary bypass of auth TODO: remove this
-    setIsAuthenticated(true);
-    setUserEmail('test@example.com');
-    setIsLoading(false);
+    // setIsAuthenticated(true);
+    // setUserEmail('test@example.com');
+    // setIsLoading(false);
     /////////////////////////////////////////////
-    
-    // try {
-    //   const result = await promptAsync();
-    //   if (result.type !== 'success') {
-    //     setError('Sign in was cancelled or failed');
-    //     setIsLoading(false);
-    //   }
-    // } catch (error) {
-    //   setError('Failed to sign in.');
-    //   setIsLoading(false);
-    // }
+
+    try {
+      const result = await promptAsync();
+      if (result.type !== 'success') {
+        setError('Sign in was cancelled or failed');
+        setIsLoading(false);
+      }
+    } catch (error) {
+      setError('Failed to sign in.');
+      setIsLoading(false);
+    }
   };
 
   const signOut = () => {
