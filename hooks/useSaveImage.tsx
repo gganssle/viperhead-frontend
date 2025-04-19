@@ -1,6 +1,6 @@
-import { Alert } from 'react-native';
 import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system';
+import { Alert } from 'react-native';
 
 /**
  * Custom hook for saving images to the device's media library
@@ -16,25 +16,23 @@ export function useSaveImage() {
    * @throws Will show an alert if permissions are denied or saving fails
    */
   const saveImage = async (imageUrl: string) => {
-    try {
-      if (!imageUrl) return;
+    if (!imageUrl) return;
 
-      // Request permission to access media library
+    try {
       const { status } = await MediaLibrary.requestPermissionsAsync();
+      
       if (status !== 'granted') {
-        Alert.alert('Permission needed', 'Please grant permission to save images');
+        Alert.alert('Error', 'Permission denied to save photos');
         return;
       }
 
-      // Download image to temporary location
-      const fileUri = `${FileSystem.cacheDirectory}temp_image.jpg`;
-      await FileSystem.downloadAsync(imageUrl, fileUri);
+      const localUri = await FileSystem.downloadAsync(
+        imageUrl,
+        FileSystem.documentDirectory + 'temp_image.jpg'
+      );
 
-      // Save downloaded image to media library
-      await MediaLibrary.saveToLibraryAsync(fileUri);
-      
-      // Show success message
-      Alert.alert('Success', 'Image saved to your photos!');
+      await MediaLibrary.saveToLibraryAsync(localUri.uri);
+      Alert.alert('Success', 'Image saved to photos!');
     } catch (error) {
       console.error('Error saving image:', error);
       Alert.alert('Error', 'Failed to save image');
