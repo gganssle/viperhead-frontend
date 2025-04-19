@@ -76,7 +76,7 @@ export default function HomeScreen() {
       }
     } catch (error) {
       console.error('Error generating image:', error);
-      // You might want to show an error message to the user here
+      Alert.alert('Error', 'Failed to generate image. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -107,6 +107,7 @@ export default function HomeScreen() {
               <Image
                 source={{ uri: imageUrl }}
                 style={styles.image}
+                testID="generated-image"
               />
               <ThemedText style={styles.styleText}>Style: {currentStyle}</ThemedText>
               <Pressable 
