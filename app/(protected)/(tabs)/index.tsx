@@ -30,13 +30,13 @@ export default function HomeScreen() {
       setLoading(true);
       
       // Check server liveness first
-      const livenessCheck = await fetch('http://localhost:8000/');
+      const livenessCheck = await fetch(`${CONFIG.SERVER.BASE_URL}${CONFIG.SERVER.ENDPOINTS.HEALTH_CHECK}`);
       if (!livenessCheck.ok) {
         throw new Error('Server is not available');
       }
 
       // Generate image using local server
-      const response = await fetch('http://localhost:8000/generate-image', {
+      const response = await fetch(`${CONFIG.SERVER.BASE_URL}${CONFIG.SERVER.ENDPOINTS.GENERATE_IMAGE}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

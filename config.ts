@@ -1,8 +1,14 @@
-
-// Rename this file to config.ts and add your OpenAI API key
+// Configuration file for the application
 interface Config {
     GOOGLE_IOS_CLIENT_ID: string;
     ALLOWED_EMAILS: string[];
+    SERVER: {
+        BASE_URL: string;
+        ENDPOINTS: {
+            HEALTH_CHECK: string;
+            GENERATE_IMAGE: string;
+        };
+    };
 }
 
 export const CONFIG: Config = {
@@ -11,5 +17,12 @@ export const CONFIG: Config = {
         // Add whitelisted email addresses here
         'grahamganssle@gmail.com',
         'claire.elise.r@gmail.com'
-    ]
+    ],
+    SERVER: {
+        BASE_URL: 'http://localhost:8000',
+        ENDPOINTS: {
+            HEALTH_CHECK: '/',
+            GENERATE_IMAGE: '/generate-image'
+        }
+    }
 };
