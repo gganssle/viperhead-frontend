@@ -2,13 +2,12 @@ import { Image, StyleSheet, Platform, Pressable, ActivityIndicator, ScrollView, 
 import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSaveImage } from '@/hooks/useSaveImage';
+import { useAuth } from '@/hooks/useAuth';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { CONFIG } from '../../../config';
 import { useGeneratedImages } from '@/stores/imageStore';
-
-import Constants from 'expo-constants';
 
 /**
  * Main screen component for generating AI images
@@ -21,34 +20,51 @@ export default function HomeScreen() {
   const { addImage } = useGeneratedImages();
   const insets = useSafeAreaInsets();
   const { saveImage } = useSaveImage();
+  const { accessToken } = useAuth();
 
   /**
-   * Generates a new image using the local server
+   * Generates a new image using the server
    */
   const generateImage = async () => {
     try {
+      if (!accessToken) {
+        throw new Error('Not authenticated. Please sign in again.');
+      }
+
       setLoading(true);
       
       // Check server liveness first
+      console.log('Checking server health at:', `${CONFIG.SERVER.BASE_URL}${CONFIG.SERVER.ENDPOINTS.HEALTH_CHECK}`);
       const livenessCheck = await fetch(`${CONFIG.SERVER.BASE_URL}${CONFIG.SERVER.ENDPOINTS.HEALTH_CHECK}`);
+      console.log('Health check status:', livenessCheck.status);
       if (!livenessCheck.ok) {
         throw new Error('Server is not available');
       }
 
-      // Generate image using local server
+      // Generate image using server
+      console.log('Using access token:', accessToken);
+      console.log('Requesting image generation from:', `${CONFIG.SERVER.BASE_URL}${CONFIG.SERVER.ENDPOINTS.GENERATE_IMAGE}`);
       const response = await fetch(`${CONFIG.SERVER.BASE_URL}${CONFIG.SERVER.ENDPOINTS.GENERATE_IMAGE}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
         }
       });
+      console.log('Request headers:', {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+      });
+      console.log('Image generation response status:', response.status);
 
       if (!response.ok) {
-        throw new Error('Failed to generate image');
+        const errorText = await response.text();
+        console.error('Server error response:', errorText);
+        throw new Error(`Failed to generate image: ${response.status} ${errorText}`);
       }
 
       const data = await response.json();
-      console.log('Server response:', data);
+      console.log('Server response data:', data);
       
       // Update state with generated image
       if (data.image_url) {
@@ -58,9 +74,10 @@ export default function HomeScreen() {
       } else {
         console.log('No image_url in response data:', data);
       }
-    } catch (error) {
-      console.error('Error generating image:', error);
-      Alert.alert('Error', 'Failed to generate image. Please try again.');
+    } catch (error: unknown) {
+      console.error('Error details:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      Alert.alert('Error', `Failed to generate image: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
