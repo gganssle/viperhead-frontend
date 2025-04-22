@@ -19,6 +19,7 @@ export default {
           {
             CFBundleURLSchemes: [
               'com.googleusercontent.apps.862228002068-ak3bk6d92p31s8rli3uctqvkiu6lputn',
+              'viperhead'
             ],
           },
         ],

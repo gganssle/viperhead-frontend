@@ -121,7 +121,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('Starting sign in...');
       setIsLoading(true);
       setError(null);
-      const result = await promptAsync();
+      console.log('Using proxy mode for auth...');
+      const result = await promptAsync({ useProxy: true });
       console.log('Sign in result:', result);
       if (result.type !== 'success') {
         setError('Sign in was cancelled');
