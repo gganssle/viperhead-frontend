@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
+import * as AuthSession from 'expo-auth-session';
 import { CONFIG } from '../config';
 
 // Initialize WebBrowser for OAuth
@@ -25,17 +26,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Google OAuth request for development/standalone builds (iOS)
   const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId: CONFIG.GOOGLE_WEB_CLIENT_ID,
     iosClientId: CONFIG.GOOGLE_IOS_CLIENT_ID,
-    clientId: CONFIG.GOOGLE_WEB_CLIENT_ID,
+    // Remove useProxy and webClientId for dev/standalone iOS builds
+    // Optionally, add androidClientId if supporting Android dev builds
     scopes: [
       'openid',
-      'https://www.googleapis.com/auth/userinfo.email'
+      'profile',
+      'email',
     ],
-    extraParams: {
-      access_type: 'offline'
-    }
   });
 
   useEffect(() => {
@@ -121,8 +121,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('Starting sign in...');
       setIsLoading(true);
       setError(null);
-      console.log('Using proxy mode for auth...');
-      const result = await promptAsync({ useProxy: true });
+      // For dev/standalone builds, the redirect URI will be your custom scheme (handled automatically)
+      console.log('Redirect URI:', AuthSession.makeRedirectUri());
+      const result = await promptAsync();
       console.log('Sign in result:', result);
       if (result.type !== 'success') {
         setError('Sign in was cancelled');
