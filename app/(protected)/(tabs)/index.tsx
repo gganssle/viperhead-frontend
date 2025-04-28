@@ -1,87 +1,83 @@
 import { Image, StyleSheet, Platform, Pressable, ActivityIndicator, ScrollView, View, Alert } from 'react-native';
 import { useState } from 'react';
-import OpenAI from 'openai';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSaveImage } from '@/hooks/useSaveImage';
+import { useAuth } from '@/hooks/useAuth';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { CONFIG } from '../../../config';
 import { useGeneratedImages } from '@/stores/imageStore';
 
-import Constants from 'expo-constants';
-
-
-/**
- * List of artistic styles that can be randomly applied to generated images
- */
-const artStyles = [
-  "in the style of Van Gogh's Starry Night",
-  "as a Renaissance oil painting",
-  "in cyberpunk neon style",
-  "as a watercolor illustration",
-  "in art deco style",
-  "as a comic book illustration",
-  "in minimalist Japanese ink style",
-  "as a Pop Art piece",
-  "in the style of Studio Ghibli",
-  "as a surrealist Salvador Dali painting",
-  "in pixel art style",
-  "as a medieval tapestry",
-  "in vaporwave aesthetic",
-  "as a chalk pastel drawing",
-  "in steampunk style"
-];
-
 /**
  * Main screen component for generating AI images
- * Handles image generation using DALL-E and provides saving functionality
+ * Handles image generation using local server and provides saving functionality
  */
 export default function HomeScreen() {
   // State management
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [currentStyle, setCurrentStyle] = useState<string>("");
   const { addImage } = useGeneratedImages();
   const insets = useSafeAreaInsets();
   const { saveImage } = useSaveImage();
-
-  // Initialize OpenAI client
-  const apiKey = Constants.expoConfig?.extra?.openaiApiKey;
-
-  const openai = new OpenAI({
-    apiKey: apiKey,
-    dangerouslyAllowBrowser: true // Required for Expo web
-  });
+  const { accessToken } = useAuth();
 
   /**
-   * Generates a new image using DALL-E 3
-   * Applies a random artistic style from the artStyles list
+   * Generates a new image using the server
    */
   const generateImage = async () => {
     try {
+      if (!accessToken) {
+        throw new Error('Not authenticated. Please sign in again.');
+      }
+
       setLoading(true);
-      // Select random art style
-      const randomStyle = artStyles[Math.floor(Math.random() * artStyles.length)];
-      setCurrentStyle(randomStyle);
       
-      // Generate image using DALL-E
-      const response = await openai.images.generate({
-        model: "dall-e-3",
-        prompt: `Generate an image of my black lab, except instead of his head, replace it with the head of a viper, ${randomStyle}`,
-        n: 1,
-        size: "1024x1024",
+      // Check server liveness first
+      console.log('Checking server health at:', `${CONFIG.SERVER.BASE_URL}${CONFIG.SERVER.ENDPOINTS.HEALTH_CHECK}`);
+      const livenessCheck = await fetch(`${CONFIG.SERVER.BASE_URL}${CONFIG.SERVER.ENDPOINTS.HEALTH_CHECK}`);
+      console.log('Health check status:', livenessCheck.status);
+      if (!livenessCheck.ok) {
+        throw new Error('Server is not available');
+      }
+
+      // Generate image using server
+      console.log('Using access token:', accessToken);
+      console.log('Requesting image generation from:', `${CONFIG.SERVER.BASE_URL}${CONFIG.SERVER.ENDPOINTS.GENERATE_IMAGE}`);
+      const response = await fetch(`${CONFIG.SERVER.BASE_URL}${CONFIG.SERVER.ENDPOINTS.GENERATE_IMAGE}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        }
       });
+      console.log('Request headers:', {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+      });
+      console.log('Image generation response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server error response:', errorText);
+        throw new Error(`Failed to generate image: ${response.status} ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('Server response data:', data);
       
       // Update state with generated image
-      if (response.data[0].url) {
-        const url = response.data[0].url;
-        setImageUrl(url);
-        addImage(url, randomStyle);
+      if (data.image_url) {
+        console.log('Setting image URL:', data.image_url);
+        setImageUrl(data.image_url);
+        addImage(data.image_url);
+      } else {
+        console.log('No image_url in response data:', data);
       }
-    } catch (error) {
-      console.error('Error generating image:', error);
-      Alert.alert('Error', 'Failed to generate image. Please try again.');
+    } catch (error: unknown) {
+      console.error('Error details:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      Alert.alert('Error', `Failed to generate image: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -114,7 +110,6 @@ export default function HomeScreen() {
                 style={styles.image}
                 testID="generated-image"
               />
-              <ThemedText style={styles.styleText}>Style: {currentStyle}</ThemedText>
               <Pressable 
                 onPress={handleSaveImage}
                 style={({pressed}) => [
@@ -197,11 +192,6 @@ const styles = StyleSheet.create({
   placeholder: {
     fontSize: 16,
     marginBottom: 20,
-  },
-  styleText: {
-    fontSize: 16,
-    marginBottom: 20,
-    textAlign: 'center',
   },
   saveButton: {
     backgroundColor: '#4CAF50',

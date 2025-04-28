@@ -4,7 +4,7 @@ export default {
   expo: {
     name: 'viperhead',
     slug: 'viperhead',
-    version: '1.0.0',
+    version: '2.0.0',
     orientation: 'portrait',
     icon: './assets/images/icon.png',
     scheme: 'viperhead',
@@ -18,7 +18,7 @@ export default {
         CFBundleURLTypes: [
           {
             CFBundleURLSchemes: [
-              'com.googleusercontent.apps.862228002068-ak3bk6d92p31s8rli3uctqvkiu6lputn',
+              'com.googleusercontent.apps.862228002068-ak3bk6d92p31s8rli3uctqvkiu6lputn'
             ],
           },
         ],
