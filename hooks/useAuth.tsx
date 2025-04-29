@@ -2,7 +2,10 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import * as AuthSession from 'expo-auth-session';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import { Platform } from 'react-native';
 import { CONFIG } from '../config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Initialize WebBrowser for OAuth
 WebBrowser.maybeCompleteAuthSession();
@@ -14,6 +17,7 @@ interface AuthContextType {
   accessToken: string | null;
   signIn: () => Promise<void>;
   signOut: () => void;
+  signInWithApple: () => Promise<void>;
   error: string | null;
 }
 
@@ -136,6 +140,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const signInWithApple = async () => {
+    try {
+      if (!(Platform.OS === 'ios' && await AppleAuthentication.isAvailableAsync())) {
+        setError('Sign In with Apple is not available on this device.');
+        return;
+      }
+      setIsLoading(true);
+      setError(null);
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+      const email = credential.email;
+      console.log('Apple credential:', credential);
+      setIsAuthenticated(true);
+      setUserEmail(email);
+      setAccessToken(credential.identityToken || null);
+      setError(null);
+    } catch (e: any) {
+      if (e.code === 'ERR_CANCELED') {
+        setError('Sign In with Apple was cancelled.');
+      } else {
+        setError('Sign In with Apple failed.');
+        console.error('Apple sign-in error:', e);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const signOut = () => {
     setIsAuthenticated(false);
     setUserEmail(null);
@@ -153,6 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         accessToken,
         signIn,
         signOut,
+        signInWithApple,
         error,
       }}
     >

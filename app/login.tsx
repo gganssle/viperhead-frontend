@@ -1,12 +1,14 @@
-import { StyleSheet, View, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, ActivityIndicator, Image, SafeAreaView, StatusBar } from 'react-native';
 import { Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../hooks/useAuth';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import { Platform } from 'react-native';
 
 export default function LoginScreen() {
-  const { signIn, isLoading, error } = useAuth();
+  const { signIn, signInWithApple, isLoading, error } = useAuth();
   const router = useRouter();
 
   const handleSignIn = async () => {
@@ -22,33 +24,68 @@ export default function LoginScreen() {
     }
   };
 
-  return (
-    <ThemedView style={styles.container}>
-      <View style={styles.content}>
-        <ThemedText style={styles.title}>Welcome</ThemedText>
-        <ThemedText style={styles.subtitle}>Sign in to continue</ThemedText>
-        
-        {error && (
-          <ThemedText style={styles.error}>{error}</ThemedText>
-        )}
+  const handleAppleSignIn = async () => {
+    try {
+      await signInWithApple();
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace('/');
+      }
+    } catch (e) {
+      console.error('Apple sign-in error:', e);
+    }
+  };
 
-        {isLoading ? (
-          <ActivityIndicator size="large" color="#A1CEDC" />
-        ) : (
-          <Pressable 
-            onPress={handleSignIn}
-            style={({pressed}) => [
-              styles.button,
-              pressed && styles.buttonPressed
-            ]}
-          >
-            <ThemedText style={styles.buttonText}>
-              Sign in with Google
-            </ThemedText>
-          </Pressable>
-        )}
-      </View>
-    </ThemedView>
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <View style={{ height: 60 }} />
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" translucent={false} hidden={false} />
+      <ThemedView style={styles.container}>
+        <View style={styles.content}>
+          <ThemedText style={styles.title}>Welcome</ThemedText>
+          <ThemedText style={styles.subtitle}>Sign in to continue</ThemedText>
+          
+          {error && (
+            <ThemedText style={styles.error}>{error}</ThemedText>
+          )}
+
+          {isLoading ? (
+            <ActivityIndicator size="large" color="#A1CEDC" />
+          ) : (
+            <>
+              <Pressable 
+                onPress={handleSignIn}
+                style={({pressed}) => [
+                  styles.button,
+                  pressed && styles.buttonPressed
+                ]}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                  <Image
+                    source={require('../assets/images/google-logo.png')}
+                    style={{ width: 24, height: 24, marginRight: 8 }}
+                    resizeMode="contain"
+                  />
+                  <ThemedText style={styles.buttonText}>
+                    Sign in with Google
+                  </ThemedText>
+                </View>
+              </Pressable>
+              {Platform.OS === 'ios' && (
+                <AppleAuthentication.AppleAuthenticationButton
+                  buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                  buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                  cornerRadius={5}
+                  style={{ width: '100%', height: 44, marginTop: 16 }}
+                  onPress={handleAppleSignIn}
+                />
+              )}
+            </>
+          )}
+        </View>
+      </ThemedView>
+    </SafeAreaView>
   );
 }
 
