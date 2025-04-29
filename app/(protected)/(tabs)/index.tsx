@@ -20,12 +20,27 @@ export default function HomeScreen() {
   const { addImage } = useGeneratedImages();
   const insets = useSafeAreaInsets();
   const { saveImage } = useSaveImage();
-  const { accessToken } = useAuth();
+  const { accessToken, userEmail, signOut, signIn } = useAuth();
+  const [showGoogleRequired, setShowGoogleRequired] = useState(false);
 
   /**
    * Generates a new image using the server
    */
   const generateImage = async () => {
+    // Require Google sign-in if Apple sign-in is detected
+    if (accessToken && userEmail === null) {
+      setShowGoogleRequired(true);
+      Alert.alert(
+        'Google Sign-In Required',
+        'You must sign in with Google to use the Google image generation service.',
+        [
+          { text: 'Sign Out', onPress: () => { signOut(); setShowGoogleRequired(false); } },
+          { text: 'OK', onPress: () => setShowGoogleRequired(false) }
+        ]
+      );
+      return;
+    }
+
     try {
       if (!accessToken) {
         throw new Error('Not authenticated. Please sign in again.');
@@ -51,10 +66,10 @@ export default function HomeScreen() {
           'Authorization': `Bearer ${accessToken}`
         }
       });
-      console.log('Request headers:', {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`
-      });
+      // console.log('Request headers:', {
+      //   'Content-Type': 'application/json',
+      //   'Authorization': `Bearer ${accessToken}`
+      // });
       console.log('Image generation response status:', response.status);
 
       if (!response.ok) {
