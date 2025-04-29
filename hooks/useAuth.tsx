@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (response?.type === 'success') {
       setIsLoading(true); // Set loading when starting auth process
-      console.log('Full auth response:', response);
+      // console.log('Full auth response:', response);
       const { authentication } = response;
       if (authentication?.accessToken) {
         console.log('Got access token, fetching user info...');
@@ -155,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ],
       });
       const email = credential.email;
-      console.log('Apple credential:', credential);
+      // console.log('Apple credential:', credential);
       setIsAuthenticated(true);
       setUserEmail(email);
       setAccessToken(credential.identityToken || null);

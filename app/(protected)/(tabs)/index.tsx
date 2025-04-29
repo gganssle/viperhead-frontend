@@ -57,7 +57,7 @@ export default function HomeScreen() {
       }
 
       // Generate image using server
-      console.log('Using access token:', accessToken);
+      // console.log('Using access token:', accessToken);
       console.log('Requesting image generation from:', `${CONFIG.SERVER.BASE_URL}${CONFIG.SERVER.ENDPOINTS.GENERATE_IMAGE}`);
       const response = await fetch(`${CONFIG.SERVER.BASE_URL}${CONFIG.SERVER.ENDPOINTS.GENERATE_IMAGE}`, {
         method: 'POST',
