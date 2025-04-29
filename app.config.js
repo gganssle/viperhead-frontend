@@ -4,7 +4,7 @@ export default {
   expo: {
     name: 'viperhead',
     slug: 'viperhead',
-    version: '2.0.0',
+    version: '2.1.0',
     orientation: 'portrait',
     icon: './assets/images/icon.png',
     scheme: 'viperhead',
